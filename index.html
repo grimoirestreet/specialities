@@ -9,7 +9,7 @@
   html,body{background:var(--bg); color:var(--ink); margin:0; font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial}
   .wrap{max-width:1100px; margin:0 auto; padding:20px}
   .header{background:var(--side); border-bottom:1px solid var(--line); position:sticky; top:0; z-index:5}
-  .header .wrap{display:flex; gap:12px; align-items:center}
+  .header .wrap{display:flex; gap:12px; align-items:center; justify-content:space-between}
   .title{font-weight:700}
   .panel{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:14px}
   .spaced{display:flex; justify-content:space-between; align-items:center}
@@ -19,9 +19,7 @@
   .caps-simple th, .caps-simple td{border-bottom:1px solid var(--line); padding:8px 10px}
   .caps-simple th{color:var(--muted); font-weight:600; text-align:left}
   .caps-simple .num{font-variant-numeric: tabular-nums}
-  .pill{display:inline-block; padding:2px 8px; border-radius:999px; border:1px solid var(--line); background:#1b212a; color:#cbd1dc; font-size:12px}
-  .ok{color:var(--ok)}
-  .bad{color:var(--danger)}
+  .ok{color:var(--ok)} .bad{color:var(--danger)}
   .table{width:100%; border-collapse:collapse; margin-top:8px}
   .table th, .table td{border-bottom:1px solid var(--line); padding:8px; font-size:14px; text-align:left}
   .table th{color:var(--muted); font-weight:600}
@@ -31,12 +29,20 @@
   input, select{background:var(--panel); color:var(--ink); border:1px solid var(--line); border-radius:10px; padding:10px 12px; font-size:14px}
   a.link{color:var(--accent); text-decoration:none}
   a.link:hover{text-decoration:underline}
+  .edit-btn{background:var(--accent); color:#000; text-decoration:none; padding:6px 10px; border-radius:8px; font-size:13px; font-weight:600}
+  .edit-btn:hover{background:#e6c98e}
 </style>
 </head>
 <body>
   <div class="header">
     <div class="wrap">
       <div class="title">🜂 Grimoire Street • <span style="color:var(--accent)">Specialties Tracker</span></div>
+      <a class="edit-btn"
+         href="https://github.com/grimoirestreet/specialities/edit/main/tracker.json"
+         target="_blank"
+         rel="noreferrer"
+         title="Opens tracker.json on GitHub so staff can edit it (requires GitHub login)"
+         aria-label="Edit tracker.json on GitHub in a new tab">Edit Tracker JSON ↗</a>
     </div>
   </div>
 
@@ -46,6 +52,7 @@
       <div class="legend">
         <div>• <strong>Students</strong> (Years 1–7) have specialty caps.</div>
         <div>• <strong>Adults</strong> are uncapped and <em>not tracked</em> in this tool.</div>
+        <div>• <strong>No Adult Obscurials:</strong> All Obscurial characters must be students only.</div>
         <div>• <strong>Wandless Magic</strong> is uncapped, not tracked, and doesn’t consume a slot.</div>
       </div>
     </div>
@@ -114,16 +121,17 @@
   </div>
 
 <script>
-// Load data
+// Data source (default = your GitHub file). You can override with ?data=<URL>.
+// GitHub "blob" links are auto-converted to raw.
 const DEFAULT_ROSTER = 'https://raw.githubusercontent.com/grimoirestreet/specialities/main/tracker.json';
 const PARAM_DATA = new URLSearchParams(location.search).get('data');
 function toRaw(url){
   try{
     const u = new URL(url, location.href);
-    if(u.hostname === 'github.com'){
+    if (u.hostname === 'github.com') {
       const parts = u.pathname.split('/').filter(Boolean);
       const i = parts.indexOf('blob');
-      if(i !== -1){
+      if (i !== -1) {
         const user = parts[0], repo = parts[1], branch = parts[i+1];
         const path = parts.slice(i+2).join('/');
         return `https://raw.githubusercontent.com/${user}/${repo}/${branch}/${path}`;
@@ -134,15 +142,15 @@ function toRaw(url){
 }
 const ROSTER_URL = toRaw(PARAM_DATA || DEFAULT_ROSTER);
 
-// Config
+// Student caps (Seer = 4). Adults are ignored; Wandless is not tracked.
 const SPECIALTIES = [
-  { name:'Parselmouth', student_cap:4, link:'#', note:'' },
-  { name:'Occlumens', student_cap:8, link:'#', note:'' },
-  { name:'Legilimens', student_cap:4, link:'#', note:'' },
-  { name:'Seer', student_cap:6, link:'#', note:'' },
-  { name:'Metamorphmagus', student_cap:6, link:'#', note:'' },
+  { name:'Parselmouth',        student_cap:4, link:'#', note:'' },
+  { name:'Occlumens',          student_cap:8, link:'#', note:'' },
+  { name:'Legilimens',         student_cap:4, link:'#', note:'' },
+  { name:'Seer',               student_cap:4, link:'#', note:'' },  // lowered to 4
+  { name:'Metamorphmagus',     student_cap:6, link:'#', note:'' },
   { name:'Blood Curse Bearer', student_cap:6, link:'#', note:'' },
-  { name:'Obscurial', student_cap:2, link:'#', note:'Hard cap. Likely short lifespan.' },
+  { name:'Obscurial',          student_cap:2, link:'#', note:'No adult Obscurials allowed. Student-only cap applies.' },
   { name:'Wandless Magic Adept', student_cap:null, uncapped:true, link:'#', note:'Uncapped • Not Tracked' }
 ];
 
@@ -156,6 +164,7 @@ function isStudent(r){
 }
 function isWandless(name){ return name==='Wandless Magic Adept'; }
 
+// Counts (students only; skip retired/deceased; skip Wandless)
 function computeCounts(){
   const by={}; state.caps.forEach(s=>by[s.name]={student:0});
   state.rows.forEach(r=>{
@@ -168,27 +177,30 @@ function computeCounts(){
   return by;
 }
 
+// Availability table
 function renderCapsTable(){
   const counts=computeCounts(), tb=$('#capsTable tbody'); tb.innerHTML='';
   state.caps.forEach(s=>{
     const tr=document.createElement('tr');
-    if(s.uncapped){ 
+    if(s.uncapped){
       tr.innerHTML=`<td>${s.name}</td><td>—</td><td>—</td><td>—</td><td>${s.note||''}</td>`;
       tb.appendChild(tr); return;
     }
     const used=counts[s.name]?.student||0;
     const left=s.student_cap==null?'—':Math.max(0,s.student_cap-used);
     const leftCls=s.student_cap!=null&&left===0?'bad':'ok';
-    tr.innerHTML=`<td>${s.name}</td><td>${s.student_cap}</td><td>${used}</td><td class="${leftCls}">${left}</td><td>${s.note||''}</td>`;
+    tr.innerHTML=`<td>${s.name}</td><td class="num">${s.student_cap}</td><td class="num">${used}</td><td class="num ${leftCls}">${left}</td><td>${s.note||''}</td>`;
     tb.appendChild(tr);
   });
 }
 
+// Filters
 function renderFilters(){
   const fSpec=$('#fSpec');
   if(fSpec) fSpec.innerHTML='<option value="">All Specialties</option>'+state.caps.map(s=>`<option>${s.name}</option>`).join('');
 }
 
+// Student roster (students only)
 function renderTable(){
   const tbody=$('#table tbody'); tbody.innerHTML='';
   const q=($('#q')?.value||'').toLowerCase();
@@ -212,6 +224,7 @@ function renderTable(){
   $('#count').textContent=`${filtered.length} shown • ${state.rows.length} total`;
 }
 
+// Data load
 async function loadRoster(){
   try{
     const res=await fetch(ROSTER_URL,{cache:'no-store'});
@@ -221,13 +234,18 @@ async function loadRoster(){
     state.rows=data;
   }catch(e){
     console.error('Roster load failed:',e);
-    state.rows=[]; $('#table tbody').innerHTML=`<tr><td colspan="8" style="color:var(--muted)">Could not load roster.</td></tr>`;
+    state.rows=[];
+    $('#table tbody').innerHTML=`<tr><td colspan="8" style="color:var(--muted)">Could not load roster from <code>${ROSTER_URL}</code>.</td></tr>`;
   }
 }
 
+// Boot
 function init(){
   renderFilters(); renderCapsTable(); renderTable();
-  ['q','fSpec','fStatus','fHouse'].forEach(id=>{ const el=document.getElementById(id); if(el) el.addEventListener('input',renderTable); });
+  ['q','fSpec','fStatus','fHouse'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.addEventListener('input',renderTable);
+  });
   loadRoster().then(()=>{ renderCapsTable(); renderTable(); });
 }
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
