@@ -1,6 +1,6 @@
 [
   {
-    "specialty": "Parselmouth",
+    "specialty": "Placeholder",
     "character": "Ivy Blackthorne",
     "house": "Slytherin",
     "year": "5",
@@ -10,7 +10,7 @@
     "notes": "Known for keeping snakes in the dorms"
   },
   {
-    "specialty": "Seer",
+    "specialty": "Placeholder",
     "character": "Alaric Moon",
     "house": "Ravenclaw",
     "year": "6",
@@ -19,24 +19,4 @@
     "app": "https://link.to/application2",
     "notes": "Has visions during thunderstorms"
   },
-  {
-    "specialty": "Occlumens",
-    "character": "Professor Selene Graves",
-    "house": "— Staff / Adult —",
-    "year": "—",
-    "player": "@PlayerThree",
-    "status": "Approved",
-    "app": "https://link.to/application3",
-    "notes": "Teaches Defense Against the Dark Arts"
-  },
-  {
-    "specialty": "Legilimens",
-    "character": "Cassian Holt",
-    "house": "— Staff / Adult —",
-    "year": "—",
-    "player": "@PlayerFour",
-    "status": "On Hiatus",
-    "app": "https://link.to/application4",
-    "notes": "Former Auror, retired after injury"
-  }
 ]
