@@ -1,6 +1,6 @@
 # 🜂 Grimoire Street • Specialties Tracker
 
-This tracker powers the **Specialties Availability Table** and **Roster** on our site.
+This tracker powers the **Specialties Availability Table** and **Roster** on your site.
 It automatically loads data from the `tracker.json` file in this repository and updates whenever you commit changes.
 
 No coding knowledge is required — you only edit a single JSON file.
@@ -12,7 +12,6 @@ No coding knowledge is required — you only edit a single JSON file.
 ```
 specialities/
  ├─ tracker.json         ← Main data file (edit this for roster changes)
- ├─ tracker-template.json← Optional copy/paste template
  ├─ index.html           ← Tracker webpage (reads tracker.json automatically)
  └─ README.md            ← This guide
 ```
@@ -27,7 +26,7 @@ specialities/
 
 3. Scroll to the bottom (before the closing `]`).
 
-4. Copy the template block below and paste it on a **new line**:
+4. Copy the template below and paste it on a **new line**:
 
    ```json
    {
@@ -60,6 +59,35 @@ specialities/
 
 ---
 
+## 🧑‍🏫 Marking a Character as an Adult
+
+A character is treated as an **adult** (not counted toward student caps) if **both**:
+
+* Their `house` is set to `— Staff / Adult —`
+* Their `year` is set to `—`
+
+Example:
+
+```json
+{
+  "specialty": "Occlumens",
+  "character": "Professor Selene Graves",
+  "house": "— Staff / Adult —",
+  "year": "—",
+  "player": "@ProfessorGraves",
+  "status": "Approved",
+  "app": "https://link.to/application",
+  "notes": "Teaches Defense Against the Dark Arts"
+}
+```
+
+This keeps the **Current Availability** table correct:
+
+* **Students**: Year `1–7` and any Hogwarts house name
+* **Adults**: Year `—` and `house` = `— Staff / Adult —`
+
+---
+
 ## ✏️ Editing a Character
 
 * Find the character’s `{ ... }` block in `tracker.json`.
@@ -78,9 +106,7 @@ specialities/
 
 ---
 
-## 📄 JSON Template
-
-For quick copy/paste:
+## 📄 JSON Template (Copy & Paste)
 
 ```json
 [
@@ -96,6 +122,8 @@ For quick copy/paste:
   }
 ]
 ```
+
+Copy the **entire block inside the \[ ] array** and paste it on a new line before the `]` when adding multiple characters.
 
 ---
 
@@ -141,7 +169,3 @@ For quick copy/paste:
 
 * Once you commit changes, the tracker webpage automatically shows the new data after a refresh.
 * No need to edit `index.html` or JavaScript.
-
----
-
-Do you want me to add that? It would show a red ❌ on bad commits.
