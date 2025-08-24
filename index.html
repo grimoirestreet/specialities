@@ -121,8 +121,6 @@
   </div>
 
 <script>
-// Data source (default = your GitHub file). You can override with ?data=<URL>.
-// GitHub "blob" links are auto-converted to raw.
 const DEFAULT_ROSTER = 'https://raw.githubusercontent.com/grimoirestreet/specialities/main/tracker.json';
 const PARAM_DATA = new URLSearchParams(location.search).get('data');
 function toRaw(url){
@@ -142,14 +140,15 @@ function toRaw(url){
 }
 const ROSTER_URL = toRaw(PARAM_DATA || DEFAULT_ROSTER);
 
-// Student caps (Seer = 4). Adults are ignored; Wandless is not tracked.
+// Student caps
 const SPECIALTIES = [
   { name:'Parselmouth',        student_cap:4, link:'#', note:'' },
   { name:'Occlumens',          student_cap:8, link:'#', note:'' },
   { name:'Legilimens',         student_cap:4, link:'#', note:'' },
-  { name:'Seer',               student_cap:4, link:'#', note:'' },  // lowered to 4
+  { name:'Seer',               student_cap:4, link:'#', note:'' },
   { name:'Metamorphmagus',     student_cap:6, link:'#', note:'' },
   { name:'Blood Curse Bearer', student_cap:6, link:'#', note:'' },
+  { name:'Animagus',           student_cap:8, link:'#', note:'' }, // New!
   { name:'Obscurial',          student_cap:2, link:'#', note:'No adult Obscurials allowed. Student-only cap applies.' },
   { name:'Wandless Magic Adept', student_cap:null, uncapped:true, link:'#', note:'Uncapped • Not Tracked' }
 ];
@@ -157,14 +156,10 @@ const SPECIALTIES = [
 const $ = s=>document.querySelector(s);
 const state = { caps: SPECIALTIES, rows: [] };
 
-// Helpers
 const HOUSES = new Set(['Gryffindor','Hufflepuff','Ravenclaw','Slytherin']);
-function isStudent(r){
-  return HOUSES.has(r.house) && /^[1-7]$/.test(r.year);
-}
+function isStudent(r){ return HOUSES.has(r.house) && /^[1-7]$/.test(r.year); }
 function isWandless(name){ return name==='Wandless Magic Adept'; }
 
-// Counts (students only; skip retired/deceased; skip Wandless)
 function computeCounts(){
   const by={}; state.caps.forEach(s=>by[s.name]={student:0});
   state.rows.forEach(r=>{
@@ -177,7 +172,6 @@ function computeCounts(){
   return by;
 }
 
-// Availability table
 function renderCapsTable(){
   const counts=computeCounts(), tb=$('#capsTable tbody'); tb.innerHTML='';
   state.caps.forEach(s=>{
@@ -194,13 +188,11 @@ function renderCapsTable(){
   });
 }
 
-// Filters
 function renderFilters(){
   const fSpec=$('#fSpec');
   if(fSpec) fSpec.innerHTML='<option value="">All Specialties</option>'+state.caps.map(s=>`<option>${s.name}</option>`).join('');
 }
 
-// Student roster (students only)
 function renderTable(){
   const tbody=$('#table tbody'); tbody.innerHTML='';
   const q=($('#q')?.value||'').toLowerCase();
@@ -224,7 +216,6 @@ function renderTable(){
   $('#count').textContent=`${filtered.length} shown • ${state.rows.length} total`;
 }
 
-// Data load
 async function loadRoster(){
   try{
     const res=await fetch(ROSTER_URL,{cache:'no-store'});
@@ -239,7 +230,6 @@ async function loadRoster(){
   }
 }
 
-// Boot
 function init(){
   renderFilters(); renderCapsTable(); renderTable();
   ['q','fSpec','fStatus','fHouse'].forEach(id=>{
