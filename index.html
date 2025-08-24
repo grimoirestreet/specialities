@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Grimoire Street • Specialties Tracker</title>
+<style>
+  :root{ --bg:#0f1216; --panel:#161b22; --side:#11161c; --ink:#e9edf3; --muted:#9aa3af; --line:#232a33; --accent:#d3ba7c; --danger:#ff6b6b; --ok:#6de3a7; }
+  html,body{background:var(--bg); color:var(--ink); margin:0; font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial}
+  .wrap{max-width:1100px; margin:0 auto; padding:20px}
+  .header{background:var(--side); border-bottom:1px solid var(--line); position:sticky; top:0; z-index:5}
+  .header .wrap{display:flex; gap:12px; align-items:center}
+  .title{font-weight:700}
+  .chip{display:inline-flex; align-items:center; gap:6px; background:#1b212a; border:1px solid var(--line); color:var(--muted); padding:6px 10px; border-radius:10px; font-size:12px}
+  .panel{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:14px}
+  .spaced{display:flex; justify-content:space-between; align-items:center}
+  .muted{color:var(--muted)}
+  .legend{display:flex; gap:12px; flex-wrap:wrap; font-size:13px; color:var(--muted)}
+  .caps-simple{width:100%; border-collapse:collapse; font-size:14px; margin-top:8px}
+  .caps-simple th, .caps-simple td{border-bottom:1px solid var(--line); padding:8px 10px}
+  .caps-simple th{color:var(--muted); font-weight:600; text-align:left}
+  .caps-simple .num{font-variant-numeric: tabular-nums}
+  .pill{display:inline-block; padding:2px 8px; border-radius:999px; border:1px solid var(--line); background:#1b212a; color:#cbd1dc; font-size:12px}
+  .ok{color:var(--ok)}
+  .bad{color:var(--danger)}
+  .table{width:100%; border-collapse:collapse; margin-top:8px}
+  .table th, .table td{border-bottom:1px solid var(--line); padding:8px; font-size:14px; text-align:left}
+  .table th{color:var(--muted); font-weight:600}
+  .table tr:hover{background:#141a22}
+  .hint{color:var(--muted); font-size:12px; margin-top:6px}
+  .controls{display:flex; gap:10px; flex-wrap:wrap}
+  input, select{background:var(--panel); color:var(--ink); border:1px solid var(--line); border-radius:10px; padding:10px 12px; font-size:14px}
+  a.link{color:var(--accent); text-decoration:none}
+  a.link:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+  <div class="header">
+    <div class="wrap">
+      <div class="title">🜂 Grimoire Street • <span style="color:var(--accent)">Specialties Tracker</span></div>
+      <a class="chip" href="https://discord.com/channels/1398987892143161424/1409118000000000000" target="_blank" rel="noreferrer">Tracker Channel ↗</a>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="panel" style="margin-bottom:14px">
+      <div style="font-weight:600; margin-bottom:6px">Rules (TL;DR)</div>
+      <div class="legend">
+        <div>• <strong>Students</strong> (Years 1–7 or in a House) have caps for <em>all specialties except Wandless</em>.</div>
+        <div>• <strong>Adults</strong> are uncapped for all specialties <em>except Obscurials</em> (hard cap persists).</div>
+        <div>• <strong>Wandless Magic</strong> is uncapped, not tracked, and doesn’t consume a slot (generally viable Year 5+).</div>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="panel" style="margin-bottom:14px">
+      <div style="font-weight:600; margin-bottom:6px">Filters</div>
+      <div class="controls">
+        <input id="q" placeholder="Search players, characters, houses, notes…" style="flex:1 1 320px"/>
+        <select id="fSpec" style="min-width:180px"></select>
+        <select id="fStatus" style="min-width:160px">
+          <option value="">All Statuses</option>
+          <option>Approved</option>
+          <option>Pending</option>
+          <option>On Hiatus</option>
+          <option>Retired</option>
+          <option>Deceased</option>
+        </select>
+        <select id="fHouse" style="min-width:180px">
+          <option value="">All Houses</option>
+          <option>Gryffindor</option>
+          <option>Hufflepuff</option>
+          <option>Ravenclaw</option>
+          <option>Slytherin</option>
+          <option>— Staff / Adult —</option>
+          <option>—</option>
+        </select>
+      </div>
+      <div class="hint">Use the filters to narrow the roster.</div>
+    </div>
+
+    <!-- Current Availability -->
+    <div class="panel" style="margin-bottom:14px">
+      <div style="font-weight:600; margin-bottom:6px">Current Availability</div>
+      <table class="caps-simple" id="capsTable">
+        <thead>
+          <tr>
+            <th>Specialty</th>
+            <th>Student Cap</th>
+            <th>Students Used</th>
+            <th>Slots Left</th>
+            <th>Adults</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div class="hint">Adults are counted but not capped (except Obscurials). Wandless is not tracked.</div>
+    </div>
+
+    <!-- Roster -->
+    <div class="panel">
+      <div class="spaced" style="margin-bottom:6px"><div style="font-weight:600">Roster</div><div class="muted" id="count"></div></div>
+      <table class="table" id="table">
+        <thead>
+          <tr>
+            <th>Specialty</th>
+            <th>Character</th>
+            <th>House/Role</th>
+            <th>Year</th>
+            <th>Player</th>
+            <th>Status</th>
+            <th>App Link</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <details class="hint" style="margin-top:8px"><summary>Roster JSON schema (click to view)</summary>
+        <pre style="white-space:pre-wrap; background:#141a22; padding:10px; border-radius:8px; border:1px solid var(--line); color:#cbd1dc; font-size:12px; margin-top:8px">[
+  {
+    "specialty": "Parselmouth",
+    "character": "First Last",
+    "house": "Gryffindor" | "Hufflepuff" | "Ravenclaw" | "Slytherin" | "— Staff / Adult —" | "—",
+    "year": "1"|"2"|"3"|"4"|"5"|"6"|"7"|"—",
+    "player": "@discordUser#1234",
+    "status": "Approved"|"Pending"|"On Hiatus"|"Retired"|"Deceased",
+    "app": "https://link.to/application",
+    "notes": "optional"
+  }
+]</pre>
+      </details>
+    </div>
+  </div>
+
+<script>
+const DEFAULT_ROSTER = 'https://raw.githubusercontent.com/grimoirestreet/specialities/main/tracker.json';
+const PARAM_DATA = new URLSearchParams(location.search).get('data');
+function toRaw(url){
+  try{
+    const u = new URL(url, location.href);
+    if (u.hostname === 'github.com') {
+      const parts = u.pathname.split('/').filter(Boolean);
+      const i = parts.indexOf('blob');
+      if (i !== -1) {
+        const user = parts[0], repo = parts[1], branch = parts[i+1];
+        const path = parts.slice(i+2).join('/');
+        return `https://raw.githubusercontent.com/${user}/${repo}/${branch}/${path}`;
+      }
+    }
+    return u.href;
+  }catch(e){ return url; }
+}
+const ROSTER_URL = toRaw(PARAM_DATA || DEFAULT_ROSTER);
+
+const SPECIALTIES = [
+  { key:'parselmouth', name:'Parselmouth', student_cap:4,  adult_cap:null, link:'#', note:'' },
+  { key:'occlumens',   name:'Occlumens',   student_cap:8,  adult_cap:null, link:'#', note:'' },
+  { key:'legilimens',  name:'Legilimens',  student_cap:4,  adult_cap:null, link:'#', note:'' },
+  { key:'seer',        name:'Seer',        student_cap:6,  adult_cap:null, link:'#', note:'' },
+  { key:'metamorph',   name:'Metamorphmagus', student_cap:6, adult_cap:null, link:'#', note:'' },
+  { key:'blood_curse', name:'Blood Curse Bearer', student_cap:6, adult_cap:null, link:'#', note:'' },
+  { key:'obscurial',   name:'Obscurial',   student_cap:2,  adult_cap:2,   link:'#', note:'Hard cap across server. High-risk storyline; likely short lifespan.' },
+  { key:'wandless',    name:'Wandless Magic Adept', student_cap:null, adult_cap:null, uncapped:true, link:'#', note:'Uncapped • Not Tracked • Doesn’t consume slot • Typically viable Year 5+.' }
+];
+
+const CAPS_KEY  = 'gs_caps_v4';
+const $ = s=>document.querySelector(s);
+const state = {
+  caps: JSON.parse(localStorage.getItem(CAPS_KEY)||'null') || SPECIALTIES,
+  rows: []
+};
+
+function save(){ localStorage.setItem(CAPS_KEY, JSON.stringify(state.caps)); }
+const HOUSES = new Set(['Gryffindor','Hufflepuff','Ravenclaw','Slytherin']);
+function isStudent(row){ const y = Number(row.year); return (Number.isFinite(y)&&y>=1&&y<=7)||HOUSES.has(row.house); }
+function isWandless(name){ return name==='Wandless Magic Adept'; }
+
+function computeCounts(){
+  const by={}; state.caps.forEach(s=>by[s.name]={student:0,adult:0});
+  state.rows.forEach(r=>{ if(!r.specialty||isWandless(r.specialty))return; if(r.status==='Retired'||r.status==='Deceased')return;
+    const k=r.specialty.trim(); if(!(k in by))by[k]={student:0,adult:0};
+    if(isStudent(r))by[k].student++; else by[k].adult++; });
+  return by;
+}
+
+function renderCapsTable(){
+  const counts=computeCounts(),tb=$('#capsTable tbody'); tb.innerHTML='';
+  state.caps.forEach(s=>{ const tr=document.createElement('tr');
+    if(s.uncapped){ tr.innerHTML=`<td>${s.name}</td><td>—</td><td>—</td><td>—</td><td>Uncapped</td><td>${s.note||''}</td>`; tb.appendChild(tr); return;}
+    const usedStu=counts[s.name]?.student||0, usedAd=counts[s.name]?.adult||0;
+    const capStu=s.student_cap??null, left=capStu==null?'—':Math.max(0,capStu-usedStu);
+    const leftCls=capStu!=null&&left===0?'bad':'ok'; const adultDisp=s.adult_cap==null?'Uncapped':`${usedAd}/${s.adult_cap}`;
+    tr.innerHTML=`<td>${s.name}</td><td>${capStu??'—'}</td><td>${usedStu}</td><td class="${leftCls}">${left}</td><td>${adultDisp}</td><td>${s.note||''}</td>`; tb.appendChild(tr);
+  });
+}
+
+function renderFilters(){ const fSpec=$('#fSpec'); if(fSpec)fSpec.innerHTML='<option value=\"\">All Specialties</option>'+state.caps.map(s=>`<option>${s.name}</option>`).join(''); }
+
+function renderTable(){
+  const tbody=$('#table tbody'); tbody.innerHTML=''; const q=($('#q')?.value||'').toLowerCase(); const fs=$('#fSpec')?.value||''; const st=$('#fStatus')?.value||''; const fh=$('#fHouse')?.value||'';
+  const filtered=state.rows.filter(r=>{ if(fs&&r.specialty!==fs)return false; if(st&&r.status!==st)return false; if(fh&&r.house!==fh)return false; return(`${r.specialty} ${r.character} ${r.house} ${r.year} ${r.player} ${r.status} ${r.app} ${r.notes}`.toLowerCase().includes(q)); });
+  if(filtered.length===0){ tbody.innerHTML=`<tr><td colspan=\"8\" class=\"muted\">No rows match your filters.</td></tr>`; $('#count').textContent=`0 shown • ${state.rows.length} total`; return;}
+  filtered.forEach(r=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${r.specialty}</td><td>${r.character}</td><td>${r.house}</td><td>${r.year}</td><td>${r.player}</td><td>${r.status}</td><td>${r.app}</td><td>${r.notes}</td>`; tbody.appendChild(tr); });
+  $('#count').textContent=`${filtered.length} shown • ${state.rows.length} total`;
+}
+
+async function loadRoster(){ try{ const res=await fetch(ROSTER_URL,{cache:'no-store'}); if(!res.ok)throw new Error(res.status+' '+res.statusText); const data=await res.json(); if(!Array.isArray(data))throw new Error('Roster JSON must be an array'); state.rows=data;}catch(err){ console.error('Roster load failed:',err); state.rows=[]; $('#table tbody').innerHTML=`<tr><td colspan=\"8\" style=\"color:var(--muted)\">Failed to load roster from <code>${ROSTER_URL}</code>.</td></tr>`; }}
+
+function init(){ renderFilters(); renderCapsTable(); renderTable(); ['q','fSpec','fStatus','fHouse'].forEach(id=>{ const el=document.getElementById(id); if(el)el.addEventListener('input',renderTable); }); loadRoster().then(()=>{ renderCapsTable(); renderTable(); }); }
+if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',init);} else { init(); }
+</script>
+</body>
+</html>
