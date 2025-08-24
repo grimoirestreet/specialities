@@ -1,6 +1,6 @@
 # 🜂 Grimoire Street • Specialties Tracker
 
-This tracker powers the **Specialties Availability Table** and **Roster** on your site.
+This tracker powers the **Specialties Availability Table** and **Roster** on our site.
 It automatically loads data from the `tracker.json` file in this repository and updates whenever you commit changes.
 
 No coding knowledge is required — you only edit a single JSON file.
